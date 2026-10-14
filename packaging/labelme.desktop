@@ -1,0 +1,11 @@
+[Desktop Entry]
+Type=Application
+Name=Labelme
+GenericName=Image Annotation Tool
+Comment=Image annotation with Python
+Exec=labelme %F
+Icon=labelme
+Terminal=false
+Categories=Graphics;Science;Education;
+MimeType=image/png;image/jpeg;image/tiff;image/bmp;image/webp;application/json;
+StartupNotify=true

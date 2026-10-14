@@ -25,10 +25,8 @@ on:
         type: boolean
   push:
     tags: [standalone-v*]
-
 permissions:
   contents: write
-
 jobs:
   setup:
     runs-on: ubuntu-latest
@@ -56,13 +54,11 @@ jobs:
             echo "::error::Provide a 'version' input, or run this workflow from a standalone-v* tag."
             exit 1
           fi
-
           release_tag="standalone-v${version}"
           publish="true"
           if [ "${EVENT_NAME}" = "workflow_dispatch" ]; then
             publish="${{ inputs.publish }}"
           fi
-
           {
             echo "version=${version}"
             echo "release_tag=${release_tag}"
@@ -143,6 +139,12 @@ jobs:
             "/DArchSuffix=x86_64" `
             "packaging\labelme.iss"
       - name: Smoke-test the artifact
+        # Windows is skipped on purpose: its windowed (console=False) build
+        # writes --version to the process stdout, which bash cannot reliably
+        # capture here, and the identical dist/labelme/labelme.exe was already
+        # smoke-tested by build_standalone.py just above. Inno Setup failing to
+        # find the files covers the remaining packaging risk.
+        if: matrix.kind != 'installer'
         shell: bash
         env:
           QT_QPA_PLATFORM: offscreen
@@ -157,13 +159,6 @@ jobs:
               hdiutil attach "dist/${{ matrix.artifact }}" -nobrowse -mountpoint "$mount_dir"
               "$mount_dir/labelme.app/Contents/MacOS/labelme" --version
               hdiutil detach "$mount_dir"
-              ;;
-            installer)
-              # A windowed (console=False) build writes --version to the process
-              # stdout, which pwsh would capture but git-bash does not, so check
-              # only that the launcher runs here; the real proof is that the
-              # build script smoke-tested the identical binary before packing.
-              "dist/labelme/labelme.exe" --version
               ;;
           esac
       - uses: actions/upload-artifact@v7
